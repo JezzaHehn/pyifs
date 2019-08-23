@@ -1,6 +1,8 @@
 import random, baseforms
 from math import cos, sin, pi, atan2, sqrt
 
+# theta = arctan(px/py)
+# phi = arctan(py/px)
 
 class Linear(baseforms.Transform):
     def __init__(self, rng):
@@ -74,6 +76,26 @@ class Horseshoe(baseforms.Transform):
     def transform(self, px, py):
         r = sqrt(px**2 + py**2)
         return (px-py)*(px+py)/r, 2*px*py/r
+
+
+class Polar(baseforms.Transform):
+    def __init__(self, rng):
+        super(Polar, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = arctan(px/py)
+        return theta/pi, r-1
+
+
+class Handkerchief(baseforms.Transform):
+    def __init__(self, rng):
+        super(Handkerchief, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = arctan(px/py)
+        return r * sin(theta+r), r * cos(theta-r)
 
 
 class Swirl(baseforms.Transform):
