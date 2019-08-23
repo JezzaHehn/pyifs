@@ -13,6 +13,7 @@ class Linear(baseforms.Transform):
     def transform(self, px, py):
         return (self.a * px + self.b * py, self.c * px + self.d * py)
 
+
 class Moebius(baseforms.ComplexTransform):
     def __init__(self, rng):
         super(Moebius, self).__init__(rng)
@@ -55,6 +56,24 @@ class Sinusoidal(baseforms.Transform):
 
     def transform(self, px, py):
         return sin(px), sin(py)
+
+
+class Spherical(baseforms.Transform):
+    def __init__(self, rng):
+        super(Spherical, self).__init__(rng)
+
+    def transform(self, px, py):
+        r2 = sqrt(px**2 + py**2)**2
+        return px/r2, py/r2
+
+
+class Horseshoe(baseforms.Transform):
+    def __init__(self, rng):
+        super(Horseshoe, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        return (px-py)*(px+py)/r, 2*px*py/r
 
 
 class Swirl(baseforms.Transform):
