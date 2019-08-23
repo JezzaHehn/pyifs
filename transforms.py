@@ -49,6 +49,14 @@ class Bubble(baseforms.Transform):
         return r2*px, r2*py
 
 
+class Sinusoidal(baseforms.Transform):
+    def __init__(self, rng):
+        super(Sinusoidal, self).__init__(rng)
+
+    def transform(self, px, py):
+        return sin(px), sin(py)
+
+
 class Swirl(baseforms.Transform):
     def __init__(self, rng):
         super(Swirl, self).__init__(rng)
