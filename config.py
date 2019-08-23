@@ -1,7 +1,7 @@
-width = 1920
-height = 1080
+width = 1000
+height = 1000
 iterations = 10000
 num_points = 1000
-num_transforms = 5
+num_transforms = 4
 
-image_count = 10
+image_count = 5
