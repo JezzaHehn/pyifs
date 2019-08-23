@@ -54,7 +54,7 @@ class IFS:
             self.add_transform(cls(self.rng))
 
     def add_transform(self, transform):
-        weight = self.rng.gauss(1, 0.2) * self.rng.gauss(1, 0.2)
+        weight = self.rng.gauss(1, 0.15) * self.rng.gauss(1, 0.15)
         self.total_weight += weight
         self.transforms.append((weight, transform))
 

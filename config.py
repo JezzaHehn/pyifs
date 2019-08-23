@@ -4,4 +4,4 @@ iterations = 10000
 num_points = 1000
 num_transforms = 4
 
-image_count = 5
+image_count = 20
