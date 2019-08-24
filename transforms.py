@@ -99,6 +99,46 @@ class Handkerchief(baseforms.Transform):
         return r * sin(theta+r), r * cos(theta-r)
 
 
+class Heart(baseforms.Transform):
+    def __init__(self, rng):
+        super(Heart, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = atan(px/py)
+        return r * sin(theta*r), -r * cos(theta*r)
+
+
+class Disc(baseforms.Transform):
+    def __init__(self, rng):
+        super(Disc, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        thpi = atan(px/py)/pi
+        return thpi * sin(pi*r), thpi * cos(pi*r)
+
+
+class Spiral(baseforms.Transform):
+    def __init__(self, rng):
+        super(Spiral, self).__init__(rng)
+
+    def transform(self, px, py):
+        r1 = 1/sqrt(px**2 + py**2)
+        theta = atan(px/py)
+        return r1 * (cos(theta)+sin(r)), r1 * (sin(theta)-cos(r))
+
+
+class Hyperbolic(baseforms.Transform):
+    def __init__(self, rng):
+        super(Hyperbolic, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = atan(px/py)
+        return sin(theta)/r, r * cos(theta)
+
+
 class Swirl(baseforms.Transform):
     def __init__(self, rng):
         super(Swirl, self).__init__(rng)
