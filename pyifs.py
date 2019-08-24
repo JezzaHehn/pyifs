@@ -33,7 +33,7 @@ class IFSI: # IFS Image
                     self.im.add_radiance(x, y, [r, g, b])
 
     def save(self):
-        filename = "-".join([t.__class__.__name__ for w,t in self.ifs.transforms])
+        filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms])
         filename += "_" + str(self.seed) + "_" + str(self.im.width) + "x" + str(self.im.height) + ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
         print filename
