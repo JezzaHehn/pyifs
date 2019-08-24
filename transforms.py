@@ -139,6 +139,28 @@ class Hyperbolic(baseforms.Transform):
         return sin(theta)/r, r * cos(theta)
 
 
+class Diamond(baseforms.Transform):
+    def __init__(self, rng):
+        super(Diamond, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = atan(px/py)
+        return sin(theta)*cos(r), cos(theta)*sin(r)
+
+
+class Ex(baseforms.Transform):
+    def __init__(self, rng):
+        super(Ex, self).__init__(rng)
+
+    def transform(self, px, py):
+        r = sqrt(px**2 + py**2)
+        theta = atan(px/py)
+        p03 = sin(theta + r)**3
+        p13 = cos(theta - r)**3
+        return r * (p03 + p13), r * (p03 - p13)
+
+
 class Swirl(baseforms.Transform):
     def __init__(self, rng):
         super(Swirl, self).__init__(rng)
