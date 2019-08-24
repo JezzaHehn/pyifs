@@ -46,8 +46,8 @@ class IFS:
         self.rng = rng
         transform_choices = []
         for (name, obj) in inspect.getmembers(sys.modules["transforms"], inspect.isclass):
-            if inspect.isclass(obj):
-                transform_choices.append(obj)
+            # if inspect.isclass(obj):
+            transform_choices.append(obj)
 
         for n in range(num_transforms):
             cls = self.rng.choice(transform_choices)
