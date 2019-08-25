@@ -1,5 +1,6 @@
 from __future__ import division
 import random, baseforms
+import numpy as np
 from math import cos, sin, pi, atan, atan2, sqrt
 
 # theta = atan(px/py)
@@ -124,9 +125,9 @@ class Spiral(baseforms.Transform):
         super(Spiral, self).__init__(rng)
 
     def transform(self, px, py):
-        r1 = 1/sqrt(px**2 + py**2)
+        r = sqrt(px**2 + py**2)
         theta = atan(px/py)
-        return r1 * (cos(theta)+sin(r)), r1 * (sin(theta)-cos(r))
+        return (cos(theta)+sin(r))/r, (sin(theta)-cos(r))/r
 
 
 class Hyperbolic(baseforms.Transform):

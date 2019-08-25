@@ -1,4 +1,5 @@
 import config, inspect, random, sys, transforms
+from baseforms import MoebiusBase
 from click import progressbar
 from image import Image
 
@@ -46,12 +47,14 @@ class IFS:
         self.rng = rng
         transform_choices = []
         for (name, obj) in inspect.getmembers(sys.modules["transforms"], inspect.isclass):
-            # if inspect.isclass(obj):
             transform_choices.append(obj)
 
         for n in range(num_transforms):
-            cls = self.rng.choice(transform_choices)
-            self.add_transform(cls(self.rng))
+            xform = self.rng.choice(transform_choices)
+            if random.random() < config.moebius_chance:
+                self.add_transform(MoebiusBase(self.rng, xform(self.rng)))
+            else:
+                self.add_transform(xform(self.rng))
 
     def add_transform(self, transform):
         weight = self.rng.gauss(1, 0.15) * self.rng.gauss(1, 0.15)
