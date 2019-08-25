@@ -45,8 +45,9 @@ class IFSI: # IFS Image
         return True
 
     def save(self):
-        filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms])
-        filename += "_" + str(self.seed) + "_" + str(self.im.width) + "x" + str(self.im.height) + ".png"
+        filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms]) + "_" + str(self.seed)
+        # filename += "_" + str(self.im.width) + "x" + str(self.im.height)
+        filename += ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
         print filename
 
@@ -89,6 +90,6 @@ class IFS:
         z2 = (a * z + b) / (c * z + d)
         return z2.real, z2.imag
 
-
+# Create image(s) based on config, using a new random seed each time
 for i in range(config.image_count):
     IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize))

@@ -29,6 +29,7 @@ class MoebiusBase(ComplexTransform):
         self.pre_c = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
         self.pre_d = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
         self.xform = xform
+        self.__class__.__name__ = "Moeb" + xform.__class__.__name__
         self.post_a = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
         self.post_b = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
         self.post_c = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
