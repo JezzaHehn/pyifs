@@ -12,8 +12,8 @@ class IFSI: # IFS Image
         self.im = Image(width, height)
         self.iterations = iterations
         self.num_points = num_points
-        self.iterate()
-        self.save()
+        if self.iterate():
+            self.save()
 
     def iterate(self):
         with progressbar(list(range(self.num_points))) as bar:
@@ -21,10 +21,20 @@ class IFSI: # IFS Image
                 px = self.rng.uniform(-1, 1)
                 py = self.rng.uniform(-1, 1)
                 r, g, b = 0.0, 0.0, 0.0
+                zero_count, cont_count = 0, 0
 
                 for j in range(self.iterations):
                     t = self.ifs.choose_transform()
-                    px, py = t.transform(px, py)
+                    try:
+                        px, py = t.transform(px, py)
+                    except ZeroDivisionError:
+                        zero_count += 1
+                        if zero_count >= 10:
+                            cont_count +=1
+                            if cont_count >= 10:
+                                print "Degenerate form. Aborting render."
+                                return False
+                            continue
                     r, g, b = t.transform_colour(r, g, b)
 
                     fx, fy = self.ifs.final_transform(px, py)
@@ -32,6 +42,7 @@ class IFSI: # IFS Image
                     y = int((fy + 1) * self.im.height / 2)
 
                     self.im.add_radiance(x, y, [r, g, b])
+        return True
 
     def save(self):
         filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms])

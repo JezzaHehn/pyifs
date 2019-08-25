@@ -1,4 +1,3 @@
-from __future__ import division
 import random, baseforms
 import numpy as np
 from math import cos, sin, pi, atan, atan2, sqrt
