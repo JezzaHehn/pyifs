@@ -13,16 +13,21 @@ class IFSI: # IFS Image
         self.iterations = iterations
         self.num_points = num_points
         if self.iterate():
+        if self.iterate(): # Only save non-degenerate systems
             self.save(filename)
 
     def iterate(self):
         with progressbar(list(range(self.num_points))) as bar:
             for i in bar:
+            for i in bar: # show loading bar if render takes longer than a sec
+
+                # Start with a random point, and the color black
                 px = self.rng.uniform(-1, 1)
                 py = self.rng.uniform(-1, 1)
                 r, g, b = 0.0, 0.0, 0.0
                 zero_count, cont_count = 0, 0
 
+                # Run the starting point through the system repeatedly
                 for j in range(self.iterations):
                     t = self.ifs.choose_transform()
                     try:
@@ -37,10 +42,12 @@ class IFSI: # IFS Image
                             continue
                     r, g, b = t.transform_colour(r, g, b)
 
+                    # Apply final transform for every iteration
                     fx, fy = self.ifs.final_transform(px, py)
                     x = int((fx + 1) * self.im.width / 2)
                     y = int((fy + 1) * self.im.height / 2)
 
+                    # Plot the point in the image buffer
                     self.im.add_radiance(x, y, [r, g, b])
         return True
 
