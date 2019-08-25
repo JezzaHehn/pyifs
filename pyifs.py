@@ -1,19 +1,19 @@
-import config, inspect, random, sys, transforms
+import config, inspect, os, random, sys, transforms
 from baseforms import MoebiusBase
 from click import progressbar
 from image import Image
 
 
 class IFSI: # IFS Image
-    def __init__(self, width, height, iterations, num_points, num_transforms, seed):
+    def __init__(self, width, height, iterations, num_points, num_transforms, seed, exclude=[], include=[], filename=None):
         self.seed = seed
         self.rng = random.Random(seed)
-        self.ifs = IFS(self.rng, num_transforms)
+        self.ifs = IFS(self.rng, num_transforms, exclude, include)
         self.im = Image(width, height)
         self.iterations = iterations
         self.num_points = num_points
         if self.iterate():
-            self.save()
+            self.save(filename)
 
     def iterate(self):
         with progressbar(list(range(self.num_points))) as bar:
@@ -44,22 +44,31 @@ class IFSI: # IFS Image
                     self.im.add_radiance(x, y, [r, g, b])
         return True
 
-    def save(self):
-        filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms]) + "_" + str(self.seed)
-        # filename += "_" + str(self.im.width) + "x" + str(self.im.height)
-        filename += ".png"
+    def save(self, filename=None):
+        if filename == None:
+            filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms]) + "_" + str(self.seed)
+            filename += "_" + str(self.im.width) + "x" + str(self.im.height)
+            filename += ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
         print filename
 
 
 class IFS:
-    def __init__(self, rng, num_transforms):
+    def __init__(self, rng, num_transforms, exclude, include):
         self.transforms = []
         self.total_weight = 0
         self.rng = rng
+
         transform_choices = []
-        for (name, obj) in inspect.getmembers(sys.modules["transforms"], inspect.isclass):
-            transform_choices.append(obj)
+        transform_list = inspect.getmembers(sys.modules["transforms"], inspect.isclass)
+        name_list = [name for (name, obj) in transform_list]
+        name_list = list(set(name_list) - set(exclude))
+
+        if include is not None:
+            name_list = list(set(name_list) & set(include))
+        for (name, obj) in transform_list:
+            if name in name_list:
+                transform_choices.append(obj)
 
         for n in range(num_transforms):
             xform = self.rng.choice(transform_choices)
@@ -92,4 +101,4 @@ class IFS:
 
 # Create image(s) based on config, using a new random seed each time
 for i in range(config.image_count):
-    IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize))
+    IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, exclude=[], random.randrange(sys.maxsize))
