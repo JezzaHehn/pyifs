@@ -26,18 +26,22 @@ class ComplexTransform(Transform):
 class MoebiusBase(ComplexTransform):
     def __init__(self, rng, xform):
         super(MoebiusBase, self).__init__(rng)
-        self.pre_a = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.pre_b = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.pre_c = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.pre_d = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
+        self.coef_a = complex(rng.gauss(0, 0.2), rng.gauss(0, 0.2))
+        self.coef_b = complex(rng.gauss(0, 0.2), rng.gauss(0, 0.2))
+        self.coef_c = complex(rng.gauss(0, 0.2), rng.gauss(0, 0.2))
+        self.coef_d = complex(rng.gauss(0, 0.2), rng.gauss(0, 0.2))
         self.xform = xform
-        self.__class__.__name__ = "Moeb" + xform.__class__.__name__
-        self.post_a = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.post_b = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.post_c = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
-        self.post_d = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
+        self.transform_colour = self.xform.transform_colour
+
+    def get_name(self):
+        return "Moeb" + self.xform.__class__.__name__
 
     def f(self, z):
-        z2 = (self.pre_a * z + self.pre_b) / (self.pre_c * z + self.pre_d)
-        z3 = complex(*self.xform.transform(z2.real, z2.imag))
-        return (self.post_a * z3 + self.post_b) / (self.post_c * z3 + self.post_d)
+        # apply pre-Moebius (az+b)/(cz+d)
+        z = (self.coef_a * z + self.coef_b) / (self.coef_c * z + self.coef_d)
+
+        # apply inner transform
+        z = complex(*self.xform.transform(z.real, z.imag))
+
+        # return post-Moebius (dz-b)/(-cz+a), which is inverse of pre-Moebius
+        return (self.coef_d * z - self.coef_b) / (-self.coef_c * z + self.coef_a)

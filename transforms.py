@@ -2,31 +2,34 @@ import random, baseforms
 import numpy as np
 from math import cos, sin, pi, atan, atan2, sqrt
 
+
+# r = sqrt(px**2 + py**2)
 # theta = atan(px/py)
 # phi = atan(py/px)
+
 
 class Linear(baseforms.Transform):
     def __init__(self, rng):
         super(Linear, self).__init__(rng)
-        self.a = self.rng.uniform(-1, 1)
-        self.b = self.rng.uniform(-1, 1)
-        self.c = self.rng.uniform(-1, 1)
-        self.d = self.rng.uniform(-1, 1)
+        self.coef_a = rng.uniform(-1, 1)
+        self.coef_b = rng.uniform(-1, 1)
+        self.coef_c = rng.uniform(-1, 1)
+        self.coef_d = rng.uniform(-1, 1)
 
     def transform(self, px, py):
-        return (self.a * px + self.b * py, self.c * px + self.d * py)
+        return (self.coef_a * px + self.coef_b * py, self.coef_c * px + self.coef_d * py)
 
 
 class Moebius(baseforms.ComplexTransform):
     def __init__(self, rng):
         super(Moebius, self).__init__(rng)
-        self.pre_a = complex(self.rng.uniform(-1, 1), self.rng.uniform(-1, 1))
-        self.pre_b = complex(self.rng.uniform(-1, 1), self.rng.uniform(-1, 1))
-        self.pre_c = complex(self.rng.uniform(-1, 1), self.rng.uniform(-1, 1))
-        self.pre_d = complex(self.rng.uniform(-1, 1), self.rng.uniform(-1, 1))
+        self.coef_a = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
+        self.coef_b = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
+        self.coef_c = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
+        self.coef_d = complex(rng.uniform(-1, 1), rng.uniform(-1, 1))
 
     def f(self, z):
-        return (self.pre_a * z + self.pre_b) / (self.pre_c * z + self.pre_d)
+        return (self.coef_a * z + self.coef_b) / (self.coef_c * z + self.coef_d)
 
 
 class InverseJulia(baseforms.ComplexTransform):

@@ -12,13 +12,9 @@ class IFSI: # IFS Image
         self.im = Image(width, height)
         self.iterations = iterations
         self.num_points = num_points
-        if self.iterate():
-        if self.iterate(): # Only save non-degenerate systems
-            self.save(filename)
 
     def iterate(self):
         with progressbar(list(range(self.num_points))) as bar:
-            for i in bar:
             for i in bar: # show loading bar if render takes longer than a sec
 
                 # Start with a random point, and the color black
@@ -37,7 +33,7 @@ class IFSI: # IFS Image
                         if zero_count >= 10:
                             cont_count +=1
                             if cont_count >= 10:
-                                print "Degenerate form. Aborting render."
+                                print("Degenerate form. Aborting render.")
                                 return False
                             continue
                     r, g, b = t.transform_colour(r, g, b)
@@ -49,16 +45,15 @@ class IFSI: # IFS Image
 
                     # Plot the point in the image buffer
                     self.im.add_radiance(x, y, [r, g, b])
-        return True
+        return self
 
     def save(self, filename=None):
         if filename == None:
-            filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms]) + "_" + str(self.seed)
             filename = "im/" + "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed)
             filename += "_" + str(self.im.width) + "x" + str(self.im.height)
             filename += ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
-        print filename
+        print(filename)
 
 
 class IFS:
@@ -72,7 +67,7 @@ class IFS:
         name_list = [name for (name, obj) in transform_list]
         name_list = list(set(name_list) - set(exclude))
 
-        if include is not None:
+        if include != []:
             name_list = list(set(name_list) & set(include))
         for (name, obj) in transform_list:
             if name in name_list:
@@ -108,5 +103,33 @@ class IFS:
         return z2.real, z2.imag
 
 # Create image(s) based on config, using a new random seed each time
-for i in range(config.image_count):
-    IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, exclude=[], random.randrange(sys.maxsize))
+if not os.path.exists("im/"):
+    os.makedirs("im/")
+
+i = 0
+while i < config.image_count:
+    # pick a new seed
+    seed = random.randrange(sys.maxsize)
+
+    # first render a low-resolution version to test for quality, then render full res
+    lowres = IFSI(150, 150, 1000, 1000, config.num_transforms, seed)
+    if lowres.iterate(): # Only save non-degenerate systems
+        if lowres.im.quality() >= 100:
+            IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, seed).iterate().save()
+            i += 1
+
+
+# # Create small images as dataset for classifier and GAN experiments
+# for t in ["Linear","Bubble"]:
+#     for i in range(10):
+#         path = os.path.join("data/training", t)
+#         if not os.path.exists(path):
+#             os.makedirs(path)
+#         filename = os.path.join(path, t + "%03d"%i + ".png")
+#         IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize), include=[t], filename=filename)
+# for i in range(10):
+#     path = os.path.join("data/validation", t)
+#     if not os.path.exists(path):
+#         os.makedirs(path)
+#     filename = os.path.join(path, t + "%03d"%i + ".png")
+#     IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize), include=[t], filename=filename)

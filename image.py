@@ -86,6 +86,25 @@ class Image(object):
         for value in self.data:
             yield max(value * scalefactor / iterations, 0) ** GAMMA_ENCODE
 
+    def black_ratio(self):
+        """
+        ratio of total pixel count to black pixels, used for quality check
+        """
+        return len(self.data) / float(len([i for i in self.data if i < 10]))
+
+    def colour_ratio(self):
+        """
+        ratio of unique values to total value count, used for quality check
+        """
+        m = max(self.data)
+        return float(len(set([int(i) for i in self.data]))) / len(self.data)
+
+    def quality(self):
+        """
+        combination of factors to check for potential visual appeal
+        """
+        return self.black_ratio() * self.colour_ratio()**0.5 * 10e2
+
     def save(self, filename, iterations):
         """
         save the image to given filename assuming the given number
@@ -93,8 +112,8 @@ class Image(object):
         """
 
         with open(filename, "wb") as f:
-            f.write(struct.pack("8B", 137, 80, 78, 71, 13, 10, 26, 10))
-            output_chunk(f, "IHDR", struct.pack("!2I5B", self.width, self.height, 8, 2, 0, 0, 0))
+            f.write(bytes(struct.pack("8B", 137, 80, 78, 71, 13, 10, 26, 10)))
+            output_chunk(f, "IHDR".encode("utf-8"), struct.pack("!2I5B", self.width, self.height, 8, 2, 0, 0, 0))
             compressor = zlib.compressobj()
             data = array("B")
             pixels = self.display_pixels(iterations)
@@ -102,11 +121,11 @@ class Image(object):
                 data.append(0)
                 for x in range(self.width):
                     for channel in range(3):
-                        data.append(min(255, max(0, int(pixels.next() * 255.0 + 0.5))))
+                        data.append(min(255, max(0, int(pixels.__next__() * 255.0 + 0.5))))
             compressed = compressor.compress(data.tostring())
             flushed = compressor.flush()
-            output_chunk(f, "IDAT", compressed + flushed)
-            output_chunk(f, "IEND", "")
+            output_chunk(f, "IDAT".encode("utf-8"), compressed + flushed)
+            output_chunk(f, "IEND".encode("utf-8"), "".encode("utf-8"))
 
 
 def output_chunk(f, chunk_type, data):
@@ -114,4 +133,5 @@ def output_chunk(f, chunk_type, data):
     f.write(chunk_type)
     f.write(data)
     checksum = zlib.crc32(data, zlib.crc32(chunk_type))
-    f.write(struct.pack("!i", checksum))
+    print(checksum)
+    f.write(struct.pack("!I", checksum))
