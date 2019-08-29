@@ -54,6 +54,7 @@ class IFSI: # IFS Image
     def save(self, filename=None):
         if filename == None:
             filename = "im/" + "-".join([t.__class__.__name__ for w,t in self.ifs.transforms]) + "_" + str(self.seed)
+            filename = "im/" + "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed)
             filename += "_" + str(self.im.width) + "x" + str(self.im.height)
             filename += ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
@@ -79,7 +80,7 @@ class IFS:
 
         for n in range(num_transforms):
             xform = self.rng.choice(transform_choices)
-            if random.random() < config.moebius_chance:
+            if self.rng.random() < config.moebius_chance:
                 self.add_transform(MoebiusBase(self.rng, xform(self.rng)))
             else:
                 self.add_transform(xform(self.rng))

@@ -3,15 +3,17 @@ from colour import Color
 
 class Transform(object):
     def __init__(self, rng):
-        c = Color(hsl=(rng.random(), 1, 0.5))
-        self.r, self.g, self.b = c.rgb
+        self.r, self.g, self.b = Color(hsl=(rng.random(), 1, 0.5)).rgb
         self.rng = rng
 
     def transform_colour(self, r, g, b):
-        r = (self.r + r) / 2
-        g = (self.g + g) / 2
-        b = (self.b + b) / 2
+        r = (self.r + r) / 2.0
+        g = (self.g + g) / 2.0
+        b = (self.b + b) / 2.0
         return r, g, b
+
+    def get_name(self):
+        return self.__class__.__name__
 
 
 class ComplexTransform(Transform):
