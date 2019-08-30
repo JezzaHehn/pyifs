@@ -12,9 +12,16 @@ class IFSI: # IFS Image
         self.im = Image(width, height)
         self.iterations = iterations
         self.num_points = num_points
+        if filename == None:
+            self.filename = os.path.join("im", "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed))
+            self.filename += "_" + str(self.im.width) + "x" + str(self.im.height)
+            self.filename += ".png"
+        else:
+            self.filename = filename
 
     def iterate(self):
-        with progressbar(list(range(self.num_points))) as bar:
+        label = "Rendering " + self.filename
+        with progressbar(list(range(self.num_points)), label=label) as bar:
             for i in bar: # show loading bar if render takes longer than a sec
 
                 # Start with a random point, and the color black
@@ -47,13 +54,8 @@ class IFSI: # IFS Image
                     self.im.add_radiance(x, y, [r, g, b])
         return self
 
-    def save(self, filename=None):
-        if filename == None:
-            filename = os.path.join("im", "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed))
-            filename += "_" + str(self.im.width) + "x" + str(self.im.height)
-            filename += ".png"
-        self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
-        print(filename)
+    def save(self):
+        self.im.save(self.filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
 
 
 class IFS:
@@ -105,6 +107,7 @@ class IFS:
 # Create image(s) based on config, using a new random seed each time
 if not os.path.exists("im"):
     os.makedirs("im")
+
 
 i = 0
 while i < config.image_count:

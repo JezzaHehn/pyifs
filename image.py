@@ -96,7 +96,6 @@ class Image(object):
         """
         ratio of unique values to total value count, used for quality check
         """
-        m = max(self.data)
         return float(len(set([int(i) for i in self.data]))) / len(self.data)
 
     def quality(self):
@@ -133,5 +132,4 @@ def output_chunk(f, chunk_type, data):
     f.write(chunk_type)
     f.write(data)
     checksum = zlib.crc32(data, zlib.crc32(chunk_type))
-    print(checksum)
     f.write(struct.pack("!I", checksum))
