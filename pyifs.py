@@ -49,7 +49,7 @@ class IFSI: # IFS Image
 
     def save(self, filename=None):
         if filename == None:
-            filename = "im/" + "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed)
+            filename = os.path.join("im", "-".join([t.get_name() for w,t in self.ifs.transforms]) + "_" + str(self.seed))
             filename += "_" + str(self.im.width) + "x" + str(self.im.height)
             filename += ".png"
         self.im.save(filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
@@ -103,8 +103,8 @@ class IFS:
         return z2.real, z2.imag
 
 # Create image(s) based on config, using a new random seed each time
-if not os.path.exists("im/"):
-    os.makedirs("im/")
+if not os.path.exists("im"):
+    os.makedirs("im")
 
 i = 0
 while i < config.image_count:
