@@ -1,21 +1,58 @@
-import config, ifs, os, random, sys
+import config, os, random, sys
+import PySimpleGUI as sg
+from ifs import test_seed, IFSI
 
+layout = [
+    [
+        sg.Graph(
+            canvas_size=(config.width, config.height),
+            graph_bottom_left=(0, 0),
+            graph_top_right=(config.width, config.height),
+            key="graph",
+            change_submits=True,
+            drag_submits=True
+        )
+    ]
+]
 
-# Create image(s) based on config, using a new random seed each time
-if not os.path.exists("im"):
-    os.makedirs("im")
+seed = random.randrange(sys.maxsize)
+if test_seed(config.num_transforms, seed):
+    ifsi = IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, seed).render()
+    raw = ifsi.im.raw()
 
-i = 0
-while i < config.image_count:
-    # pick a new seed
-    seed = random.randrange(sys.maxsize)
+    window = sg.Window("PyIFS", layout)
+    window.Finalize()
 
-    # first render a low-resolution version to test for quality, then render full res
-    lowres = ifs.IFSI(150, 150, 1000, 1000, config.num_transforms, seed)
-    if lowres.iterate(): # Only save non-degenerate systems
-        if lowres.im.quality() >= 100:
-            ifs.IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, seed).iterate().save()
-            i += 1
+    graph = window.Element("graph")
+    graph.DrawImage(data=raw, location=(0,0))
+
+    while True:
+        event, values = window.Read()
+        if event is None:
+            break  # exit
+        # print(event, values)
+
+        if event.startswith("graph"):
+            x, y = values["graph"]
+            if event.endswith('+UP'):
+                print(f"UP {values['graph']}")
+            else:
+                print(f"DOWN {values['graph']}")
+
+        else:
+            print(event, values)
+
+else:
+    print("Bad seed!  :(  ")
+
+# # Create image(s) based on config, using a new random seed each time
+# i = 0
+# while i < config.image_count:
+#     # pick a new seed
+#     seed = random.randrange(sys.maxsize)
+#     if test_seed(config.num_transforms, seed):
+#         IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, seed).render().save()
+#         i += 1
 
 
 # # Create small images as dataset for classifier and GAN experiments

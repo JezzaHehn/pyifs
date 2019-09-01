@@ -21,7 +21,7 @@ class IFSI: # IFS Image
         self.seed = seed
         self.rng = random.Random(seed)
         self.ifs = IFS(self.rng, num_transforms, exclude, include)
-        self.im = Image(width, height)
+        self.im = Image(width, height, max(1, (num_points * iterations) / (width * height)))
         self.iterations = iterations
         self.num_points = num_points
         self.name = "-".join([t.get_name() for w,t in self.ifs.transforms])
