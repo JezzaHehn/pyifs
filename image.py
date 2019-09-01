@@ -18,12 +18,13 @@ GAMMA_ENCODE = 0.45
 
 class Image(object):
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, iterations):
         """
         initialize blank image.
         """
         self.width = width
         self.height = height
+        self.iterations = iterations
         self.data = array("d", [0]) * (width * height * 3)
 
     def _index(self, t):
@@ -46,10 +47,9 @@ class Image(object):
         self[x, y, 1] += radiance[1]
         self[x, y, 2] += radiance[2]
 
-    def calculate_scalefactor(self, iterations):
+    def calculate_scalefactor(self):
         """
-        calculate the linear tone-mapping scalefactor for this image assuming
-        the given number of iterations.
+        calculate the linear tone-mapping scalefactor for this image
         """
         ## calculate the log-mean luminance of the image
 
@@ -60,7 +60,7 @@ class Image(object):
                 lum = self[x, y, 0] * RGB_LUMINANCE[0]
                 lum += self[x, y, 1] * RGB_LUMINANCE[1]
                 lum += self[x, y, 2] * RGB_LUMINANCE[2]
-                lum /= iterations
+                lum /= self.iterations
 
                 sum_of_logs += log10(max(lum, 0.0001))
 
@@ -76,15 +76,15 @@ class Image(object):
 
         return scalefactor
 
-    def display_pixels(self, iterations):
+    def display_pixels(self):
         """
         iterate over each channel of each pixel in image returning
         gamma-corrected number scaled 0 - 1 (although not clipped to 1).
         """
-        scalefactor = self.calculate_scalefactor(iterations)
+        scalefactor = self.calculate_scalefactor()
 
         for value in self.data:
-            yield max(value * scalefactor / iterations, 0) ** GAMMA_ENCODE
+            yield max(value * scalefactor / self.iterations, 0) ** GAMMA_ENCODE
 
     def black_ratio(self):
         """
@@ -106,16 +106,15 @@ class Image(object):
 
     def save(self, filename, iterations):
         """
-        save the image to given filename assuming the given number
-        of iterations.
         """
 
+        save the image to given filename using zlib's compressor
         with open(filename, "wb") as f:
             f.write(bytes(struct.pack("8B", 137, 80, 78, 71, 13, 10, 26, 10)))
             output_chunk(f, "IHDR".encode("utf-8"), struct.pack("!2I5B", self.width, self.height, 8, 2, 0, 0, 0))
             compressor = zlib.compressobj()
             data = array("B")
-            pixels = self.display_pixels(iterations)
+            pixels = self.display_pixels()
             for y in range(self.height):
                 data.append(0)
                 for x in range(self.width):
@@ -128,6 +127,9 @@ class Image(object):
 
 
 def output_chunk(f, chunk_type, data):
+    """
+    give chunks of packed image data for saving to file
+    """
     f.write(struct.pack("!I", len(data)))
     f.write(chunk_type)
     f.write(data)
