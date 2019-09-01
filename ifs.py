@@ -4,6 +4,18 @@ from click import progressbar
 from image import Image
 
 
+def test_seed(num_transforms, seed):
+    """
+    Test whether the IFS seed will be both non-degenerate and interesting by
+    rendering a low-resolution version
+    """
+    lowres = IFSI(150, 150, 1000, 1000, num_transforms, seed)
+    if lowres.iterate(range(1000)):
+        if lowres.im.quality() >= 100:
+            return True
+    return False
+
+
 class IFSI: # IFS Image
     def __init__(self, width, height, iterations, num_points, num_transforms, seed, exclude=[], include=[], filename=None):
         self.seed = seed
@@ -20,21 +32,29 @@ class IFSI: # IFS Image
         else:
             self.filename = filename
 
-    def test(self):
-        """
-        Test whether the IFS will be both non-degenerate and interesting
-        """
-        lowres = IFSI(150, 150, 1000, 1000, self.num_transforms, self.seed)
-        for i in range(1000):
+    def render(self, bar=True):
+        if bar:
+            label = "Rendering " + self.name
+            with progressbar(length=self.num_points, label=label, width=0) as iter:
+                if self.iterate(iter):
+                    return self
+        else:
+            if self.iterate(range(self.num_points)):
+                return self
+        return False
+
+    def iterate(self, iterator):
+        for i in iterator:
+
             # Start with a random point, and the color black
-            px = lowres.rng.uniform(-1, 1)
-            py = lowres.rng.uniform(-1, 1)
+            px = self.rng.uniform(-1, 1)
+            py = self.rng.uniform(-1, 1)
             r, g, b = 0.0, 0.0, 0.0
             zero_count, cont_count = 0, 0
 
             # Run the starting point through the system repeatedly
-            for j in range(1000):
-                t = lowres.ifs.choose_transform()
+            for j in range(self.iterations):
+                t = self.ifs.choose_transform()
                 try:
                     px, py = t.transform(px, py)
                 except ZeroDivisionError:
@@ -48,59 +68,18 @@ class IFSI: # IFS Image
                 r, g, b = t.transform_colour(r, g, b)
 
                 # Apply final transform for every iteration
-                fx, fy = lowres.ifs.final_transform(px, py)
-                x = int((fx + 1) * lowres.im.width / 2)
-                y = int((fy + 1) * lowres.im.height / 2)
+                fx, fy = self.ifs.final_transform(px, py)
+                x = int((fx + 1) * self.im.width / 2)
+                y = int((fy + 1) * self.im.height / 2)
 
                 # Plot the point in the image buffer
-                lowres.im.add_radiance(x, y, [r, g, b])
-        if lowres.im.quality() >= 100:
-            return True
-        else:
-            return False
-
-
-    def render(self, iterations, num_points):
-        label = "Rendering " + self.name
-        with progressbar(list(range(self.num_points)), label=label, width=0) as bar:
-            for i in bar: # show loading bar if render takes longer than a moment
-
-                # Start with a random point, and the color black
-                px = self.rng.uniform(-1, 1)
-                py = self.rng.uniform(-1, 1)
-                r, g, b = 0.0, 0.0, 0.0
-                zero_count, cont_count = 0, 0
-
-                # Run the starting point through the system repeatedly
-                for j in range(self.iterations):
-                    t = self.ifs.choose_transform()
-                    try:
-                        px, py = t.transform(px, py)
-                    except ZeroDivisionError:
-                        zero_count += 1
-                        if zero_count >= 10:
-                            cont_count +=1
-                            if cont_count >= 10:
-                                print("Degenerate form. Aborting render.")
-                                return False
-                            continue
-                    r, g, b = t.transform_colour(r, g, b)
-
-                    # Apply final transform for every iteration
-                    fx, fy = self.ifs.final_transform(px, py)
-                    x = int((fx + 1) * self.im.width / 2)
-                    y = int((fy + 1) * self.im.height / 2)
-
-                    # Plot the point in the image buffer
-                    self.im.add_radiance(x, y, [r, g, b])
+                self.im.add_radiance(x, y, [r, g, b])
         return self
 
-
-    def iterate(self):
-        return self.render()
-
     def save(self):
-        self.im.save(self.filename, max(1, (self.num_points * self.iterations) / (self.im.height * self.im.width)))
+        if not os.path.exists("im"):
+            os.makedirs("im")
+        self.im.save(self.filename)
 
 
 class IFS:
@@ -141,6 +120,9 @@ class IFS:
                 return transform
 
     def final_transform(self, px, py):
+        """
+        Final transform to be applied after each iteration
+        """
         a = 0.5
         b = 0
         c = 0
