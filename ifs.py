@@ -1,15 +1,15 @@
-import config, inspect, os, random, sys, transforms
+import inspect, os, random, sys, transforms
 from baseforms import MoebiusBase
 from click import progressbar
 from image import Image
 
 
-def test_seed(num_transforms, seed):
+def test_seed(num_transforms, moebius_chance, seed):
     """
     Test whether the IFS seed will be both non-degenerate and interesting by
     rendering a low-resolution version
     """
-    lowres = IFSI(150, 150, 1000, 1000, num_transforms, seed)
+    lowres = IFSI(150, 150, 1000, 1000, num_transforms, moebius_chance, seed)
     if lowres.iterate(range(1000)):
         if lowres.im.quality() >= 100:
             return True
@@ -17,11 +17,11 @@ def test_seed(num_transforms, seed):
 
 
 class IFSI: # IFS Image
-    def __init__(self, width, height, iterations, num_points, num_transforms, seed, exclude=[], include=[], filename=None):
+    def __init__(self, width, height, iterations, num_points, num_transforms, moebius_chance, seed, exclude=[], include=[], filename=None):
         self.seed = seed
         self.rng = random.Random(seed)
-        self.ifs = IFS(self.rng, num_transforms, exclude, include)
-        self.im = Image(width, height)
+        self.ifs = IFS(self.rng, num_transforms, moebius_chance, exclude, include)
+        self.im = Image(width, height, max(1, (num_points * iterations) / (width * height)))
         self.iterations = iterations
         self.num_points = num_points
         self.name = "-".join([t.get_name() for w,t in self.ifs.transforms])
@@ -80,10 +80,11 @@ class IFSI: # IFS Image
         if not os.path.exists("im"):
             os.makedirs("im")
         self.im.save(self.filename)
+        return self
 
 
 class IFS:
-    def __init__(self, rng, num_transforms, exclude, include):
+    def __init__(self, rng, num_transforms, moebius_chance, exclude, include):
         self.transforms = []
         self.total_weight = 0
         self.rng = rng
@@ -101,7 +102,7 @@ class IFS:
 
         for n in range(num_transforms):
             xform = self.rng.choice(transform_choices)
-            if self.rng.random() < config.moebius_chance:
+            if self.rng.random() < moebius_chance:
                 self.add_transform(MoebiusBase(self.rng, xform(self.rng)))
             else:
                 self.add_transform(xform(self.rng))

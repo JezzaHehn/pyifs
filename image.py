@@ -1,5 +1,6 @@
 from array import array
 from math import log10
+from numpy import zeros
 import struct
 import zlib
 
@@ -104,11 +105,10 @@ class Image(object):
         """
         return self.black_ratio() * self.colour_ratio()**0.5 * 10e2
 
-    def save(self, filename, iterations):
+    def save(self, filename):
         """
-        """
-
         save the image to given filename using zlib's compressor
+        """
         with open(filename, "wb") as f:
             f.write(bytes(struct.pack("8B", 137, 80, 78, 71, 13, 10, 26, 10)))
             output_chunk(f, "IHDR".encode("utf-8"), struct.pack("!2I5B", self.width, self.height, 8, 2, 0, 0, 0))
@@ -124,7 +124,6 @@ class Image(object):
             flushed = compressor.flush()
             output_chunk(f, "IDAT".encode("utf-8"), compressed + flushed)
             output_chunk(f, "IEND".encode("utf-8"), "".encode("utf-8"))
-
 
 def output_chunk(f, chunk_type, data):
     """
