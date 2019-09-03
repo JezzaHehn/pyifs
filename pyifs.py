@@ -7,19 +7,17 @@ from ifs import test_seed, IFSI
 sg.ChangeLookAndFeel('GreenTan')
 
 
-# Import default configuration parameters from config.py
-width = config.width
-height = config.height
-iterations = config.iterations
-num_points = config.num_points
+# Import some default configuration parameters from config.py
 num_transforms = config.num_transforms
 moebius_chance = config.moebius_chance
+
 
 # Pick a random seed based on default params
 while True:
     seed = random.randrange(sys.maxsize)
     if test_seed(num_transforms, moebius_chance, seed):
         break
+
 
 menu_def = [
     ["File", ["Open Parameters", "Save Parameters", "Save Image", "Exit"]],
@@ -29,35 +27,30 @@ menu_def = [
 
 main_layout = [
     [sg.Menu(menu_def, tearoff=True)],
-    [sg.Column([
-        [sg.Text("Width", size=(10, 2))],
-        [sg.Text("Height", size=(10, 2))]
-     ]),
-     sg.Column([
-        [sg.InputText(str(width), key="width", size=(20, 20), enable_events=True)],
-        [sg.InputText(str(height), key="height", size=(20, 20), enable_events=True)]
-     ])
+    [
+        sg.Text("Width", size=(8, 1), pad=(0,0)),
+        sg.InputText(config.width, key="width", size=(10, 1), pad=(0,0)),
+        sg.Text("Iterations", size=(10  , 1), pad=(10,0)),
+        sg.InputText(config.iterations, key="iterations", size=(15, 20), pad=(0,0))
     ],
-    [sg.Column([
-        [sg.Text("Iterations", size=(12, 2))],
-        [sg.Text("Num Points", size=(12, 2))]
-     ]),
-     sg.Column([
-        [sg.InputText(str(iterations), key="iterations", size=(20, 20), enable_events=True)],
-        [sg.InputText(str(num_points), key="num_points", size=(20, 20), enable_events=True)]
-     ])
+    [
+        sg.Text("Height", size=(8, 1), pad=(0,0)),
+        sg.InputText(config.height, key="height", size=(10, 1), pad=(0,0)),
+        sg.Text("Num Points", size=(10, 1), pad=(10,0)),
+        sg.InputText(config.num_points, key="num_points", size=(15, 20), pad=(0,0))
     ],
-    [sg.Column([
-        [sg.Text("Number of Transforms", size=(15, 2))],
-        [sg.Text("Moebius Wrapper Probability", size=(15, 2))]
-     ]),
-     sg.Column([
-        [sg.Slider(range=(1, 10), orientation="h", size=(20, 20), default_value=num_transforms, key="num_transforms", enable_events=True)],
-        [sg.Slider(range=(0, 100), orientation="h", size=(20, 20), default_value=int(moebius_chance*100), key="moebius_chance", enable_events=True)]
-     ])
+    [
+        sg.Text("Number of Transforms", size=(15, 2), pad=(0,0)),
+        sg.Slider(range=(1, 10), orientation="h", size=(20, 20), default_value=num_transforms, key="num_transforms")
     ],
-    [sg.Button("Random Seed"),
-     sg.InputText(seed, key="seed", enable_events=True)],
+    [
+        sg.Text("Moebius Wrapper Probability", size=(15, 2), pad=(0,0)),
+        sg.Slider(range=(0, 100), orientation="h", size=(20, 20), default_value=int(moebius_chance*100), key="moebius_chance")
+    ],
+    [
+        sg.Button("Random Seed"),
+        sg.InputText(seed, key="seed", size=(20,1), enable_events=True)
+    ],
     [sg.Button("Render to File")]
 ]
 
@@ -65,34 +58,17 @@ main_layout = [
 main_window = sg.Window("PyIFS", main_layout)
 main_window.Finalize()
 
+
 # Main window event loop
 while True:
     event, values = main_window.Read()
     if event is None or event == "Exit":
         break  # exit the program
 
-    if event == "width":
-        width = int(values["width"])
-
-    if event == "height":
-        height = int(values["height"])
-
-    if event == "iterations":
-        iterations = int(values["iterations"])
-
-    if event == "num_points":
-        num_points = int(values["num_points"])
-
-    if event == "num_transforms":
-        num_transforms = int(values["num_transforms"])
-
-    if event == "moebius_chance":
-        moebius_chance = int(values["moebius_chance"])
-
     if event == "Random Seed":
         while True:
             seed = random.randrange(sys.maxsize)
-            if test_seed(num_transforms, moebius_chance, seed):
+            if test_seed(int(values["num_transforms"]), int(values["moebius_chance"]), seed):
                 main_window.Element("seed").Update(str(seed))
                 break
 
@@ -100,9 +76,11 @@ while True:
         seed = int(values["seed"])
 
     if event == "Render to File":
-        ifsi = IFSI(width, height, iterations, num_points, num_transforms, moebius_chance, seed).render().save()
-        image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename)]])
-        image_window.Finalize()
+        ifsi = IFSI(int(values["width"]), int(values["height"]), int(values["iterations"]), int(values["num_points"]), int(values["num_transforms"]), int(values["moebius_chance"]), seed)
+        if ifsi.render():
+            ifsi.save()
+            image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename, size=(800,800))]])
+            image_window.Finalize()
 
     if event.startswith("editor"):
         x, y = values["editor"]
