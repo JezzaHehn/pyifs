@@ -1,26 +1,33 @@
 import inspect, os, random, sys, transforms
-from baseforms import MoebiusBase
+from baseforms import MoebiusBase, SphericalBase
 from click import progressbar
 from image import Image
 
 
-def test_seed(num_transforms, moebius_chance, seed):
+def test_seed(num_transforms, moebius_chance, spherical_chance, seed):
     """
     Test whether the IFS seed will be both non-degenerate and interesting by
     rendering a low-resolution version
     """
-    lowres = IFSI(150, 150, 1000, 1000, num_transforms, moebius_chance, seed)
+    lowres = IFSI(150, 150, 1000, 1000, num_transforms, moebius_chance, spherical_chance, seed)
     if lowres.iterate(range(1000)):
         if lowres.im.quality() >= 100:
             return True
     return False
 
 
+def get_seed(num_transforms, moebius_chance, spherical_chance):
+    while True:
+        seed = random.randrange(sys.maxsize)
+        if test_seed(num_transforms, moebius_chance, spherical_chance, seed):
+            return seed
+
+
 class IFSI: # IFS Image
-    def __init__(self, width, height, iterations, num_points, num_transforms, moebius_chance, seed, exclude=[], include=[], filename=None):
+    def __init__(self, width, height, iterations, num_points, num_transforms, moebius_chance, spherical_chance, seed, exclude=[], include=[], filename=None):
         self.seed = seed
         self.rng = random.Random(seed)
-        self.ifs = IFS(self.rng, num_transforms, moebius_chance, exclude, include)
+        self.ifs = IFS(self.rng, num_transforms, moebius_chance, spherical_chance, exclude, include)
         self.im = Image(width, height, max(1, (num_points * iterations) / (width * height)))
         self.iterations = iterations
         self.num_points = num_points
@@ -84,7 +91,7 @@ class IFSI: # IFS Image
 
 
 class IFS:
-    def __init__(self, rng, num_transforms, moebius_chance, exclude, include):
+    def __init__(self, rng, num_transforms, moebius_chance, spherical_chance, exclude, include):
         self.transforms = []
         self.total_weight = 0
         self.rng = rng
@@ -101,11 +108,13 @@ class IFS:
                 transform_choices.append(obj)
 
         for n in range(num_transforms):
-            xform = self.rng.choice(transform_choices)
+            # Pick a transform, and possibly either a Moebius and/or Spherical baseform
+            xform = self.rng.choice(transform_choices)(self.rng)
             if self.rng.random() < moebius_chance:
-                self.add_transform(MoebiusBase(self.rng, xform(self.rng)))
-            else:
-                self.add_transform(xform(self.rng))
+                xform = MoebiusBase(self.rng, xform)
+            if self.rng.random() < spherical_chance:
+                xform = SphericalBase(self.rng, xform)
+            self.add_transform(xform)
 
     def add_transform(self, transform):
         weight = self.rng.gauss(1, 0.15) * self.rng.gauss(1, 0.15)

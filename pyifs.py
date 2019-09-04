@@ -1,23 +1,13 @@
 import config, os, random, sys
 import PySimpleGUI as sg
-from ifs import test_seed, IFSI
+from ifs import get_seed, IFSI
 
 
 # Set default colour scheme for windows
 sg.ChangeLookAndFeel('GreenTan')
 
-
-# Import some default configuration parameters from config.py
-num_transforms = config.num_transforms
-moebius_chance = config.moebius_chance
-
-
-# Pick a random seed based on default params
-while True:
-    seed = random.randrange(sys.maxsize)
-    if test_seed(num_transforms, moebius_chance, seed):
-        break
-
+# Get a starting seed
+seed = get_seed(config.num_transforms, config.moebius_chance, config.spherical_chance)
 
 menu_def = [
     ["File", ["Open Parameters", "Save Parameters", "Save Image", "Exit"]],
@@ -41,17 +31,24 @@ main_layout = [
     ],
     [
         sg.Text("Number of Transforms", size=(15, 2), pad=(0,0)),
-        sg.Slider(range=(1, 10), orientation="h", size=(20, 20), default_value=num_transforms, key="num_transforms")
+        sg.Slider(range=(1, 10), orientation="h", size=(20, 20), default_value=config.num_transforms, key="num_transforms")
     ],
     [
-        sg.Text("Moebius Wrapper Probability", size=(15, 2), pad=(0,0)),
-        sg.Slider(range=(0, 100), orientation="h", size=(20, 20), default_value=int(moebius_chance*100), key="moebius_chance")
+        sg.Text("Moebius Base Probability", size=(15, 2), pad=(0,0)),
+        sg.Slider(range=(0, 100), orientation="h", size=(20, 20), default_value=int(config.moebius_chance*100), key="moebius_chance")
+    ],
+    [
+        sg.Text("Spherical Base Probability", size=(15, 2), pad=(0,0)),
+        sg.Slider(range=(0, 100), orientation="h", size=(20, 20), default_value=int(config.spherical_chance*100), key="spherical_chance")
     ],
     [
         sg.Button("Random Seed"),
-        sg.InputText(seed, key="seed", size=(20,1), enable_events=True)
+        sg.InputText(seed, key="seed", size=(30,1), enable_events=True)
     ],
-    [sg.Button("Render to File")]
+    [
+        sg.Button("Render to File"),
+        sg.ProgressBar(config.num_points, orientation="h", size=(20,20), key="progress")
+    ]
 ]
 
 
@@ -66,20 +63,22 @@ while True:
         break  # exit the program
 
     if event == "Random Seed":
-        while True:
-            seed = random.randrange(sys.maxsize)
-            if test_seed(int(values["num_transforms"]), int(values["moebius_chance"]), seed):
-                main_window.Element("seed").Update(str(seed))
-                break
+        seed = get_seed(int(values["num_transforms"]), int(values["moebius_chance"])/100, int(values["spherical_chance"])/100)
+        main_window.Element("seed").Update(str(seed))
 
     if event == "seed":
         seed = int(values["seed"])
 
     if event == "Render to File":
-        ifsi = IFSI(int(values["width"]), int(values["height"]), int(values["iterations"]), int(values["num_points"]), int(values["num_transforms"]), int(values["moebius_chance"]), seed)
-        if ifsi.render():
+        ifsi = IFSI(int(values["width"]), int(values["height"]),
+                    int(values["iterations"]), int(values["num_points"]),
+                    int(values["num_transforms"]), int(values["moebius_chance"])/100,
+                    int(values["spherical_chance"])/100, seed)
+        bar = main_window.Element("progress")
+        bar.max_value = int(values["num_points"])
+        if ifsi.render(bar=bar):
             ifsi.save()
-            image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename, size=(800,800))]])
+            image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename)]])
             image_window.Finalize()
 
     if event.startswith("editor"):
