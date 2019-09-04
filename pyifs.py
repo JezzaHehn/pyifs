@@ -2,6 +2,9 @@ import config, os, random, sys
 import PySimpleGUI as sg
 from ifs import get_seed, IFSI
 
+# Set up image plotting
+from matplotlib import pyplot as plt
+plt.ion()
 
 # Set default colour scheme for windows
 sg.ChangeLookAndFeel('GreenTan')
@@ -9,6 +12,7 @@ sg.ChangeLookAndFeel('GreenTan')
 # Get a starting seed
 seed = get_seed(config.num_transforms, config.moebius_chance, config.spherical_chance)
 
+# Top menu buttons
 menu_def = [
     ["File", ["Open Parameters", "Save Parameters", "Save Image", "Exit"]],
     ["Edit", "Undo"],
@@ -51,7 +55,7 @@ main_layout = [
     ]
 ]
 
-
+# Create and open the main window using the above layout
 main_window = sg.Window("PyIFS", main_layout)
 main_window.Finalize()
 
@@ -67,7 +71,10 @@ while True:
         main_window.Element("seed").Update(str(seed))
 
     if event == "seed":
-        seed = int(values["seed"])
+        try:
+            seed = int(values["seed"])
+        except ValueError:
+            seed = 0
 
     if event == "Render to File":
         ifsi = IFSI(int(values["width"]), int(values["height"]),
@@ -75,9 +82,11 @@ while True:
                     int(values["num_transforms"]), int(values["moebius_chance"])/100,
                     int(values["spherical_chance"])/100, seed)
         bar = main_window.Element("progress")
-        bar.max_value = int(values["num_points"])
+        bar.UpdateBar(0, int(values["num_points"]))
         if ifsi.render(bar=bar):
-            ifsi.save()
+            ifsi.save_image()
+            # plt.imshow(ifsi.get_image())
+            # plt.draw()
             image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename)]])
             image_window.Finalize()
 

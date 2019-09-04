@@ -1,4 +1,4 @@
-import inspect, os, random, sys, transforms
+import inspect, numpy, os, random, sys, transforms
 from baseforms import MoebiusBase, SphericalBase
 from click import progressbar
 from image import Image
@@ -90,12 +90,15 @@ class IFSI: # IFS Image
                 guibar.UpdateBar(i+1)
         return self
 
-    def save(self):
+    def save_image(self):
         if not os.path.exists("im"):
             os.makedirs("im")
         self.im.save(self.filename)
         return self
 
+    def get_image(self):
+        a = numpy.array(self.im.data)
+        return numpy.reshape(a / max(a), (self.im.width, self.im.height, 3))
 
 class IFS:
     def __init__(self, rng, num_transforms, moebius_chance, spherical_chance, exclude, include):
