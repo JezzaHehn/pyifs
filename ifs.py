@@ -40,17 +40,21 @@ class IFSI: # IFS Image
             self.filename = filename
 
     def render(self, bar=True):
-        if bar:
+        if bar is True:
             label = "Rendering " + self.name
             with progressbar(length=self.num_points, label=label, width=0) as iter:
                 if self.iterate(iter):
                     return self
         else:
-            if self.iterate(range(self.num_points)):
+            if hasattr(bar, "UpdateBar"):
+                guibar = bar
+            else:
+                guibar = None
+            if self.iterate(range(self.num_points), guibar=guibar):
                 return self
         return False
 
-    def iterate(self, iterator):
+    def iterate(self, iterator, guibar=None):
         for i in iterator:
 
             # Start with a random point, and the color black
@@ -81,6 +85,9 @@ class IFSI: # IFS Image
 
                 # Plot the point in the image buffer
                 self.im.add_radiance(x, y, [r, g, b])
+
+            if guibar:
+                guibar.UpdateBar(i+1)
         return self
 
     def save(self):
