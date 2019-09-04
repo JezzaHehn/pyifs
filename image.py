@@ -32,7 +32,7 @@ class Image(object):
         x, y, channel = t
         index = (x + ((self.height - 1 - y) * self.width)) * 3 + channel
 
-        return min(max(index, 0), len(self.data) - 1)
+        return index % len(self.data)
 
     def __getitem__(self, t):
         return self.data[self._index(t)]
