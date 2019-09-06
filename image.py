@@ -99,7 +99,7 @@ class Image(object):
         """
         return float(len(set([int(i) for i in self.data]))) / len(self.data)
 
-    def quality(self):
+    def interest_factor(self):
         """
         combination of factors to check for potential visual appeal
         """

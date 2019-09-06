@@ -11,7 +11,7 @@ def test_seed(num_transforms, moebius_chance, spherical_chance, seed):
     """
     lowres = IFSI(150, 150, 1000, 1000, num_transforms, moebius_chance, spherical_chance, seed)
     if lowres.iterate(range(1000)):
-        if lowres.im.quality() >= 100:
+        if lowres.im.interest_factor() >= 100:
             return True
     return False
 
