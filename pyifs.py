@@ -5,6 +5,8 @@ def print_help():
     print("""
     -?, --help: Display this list
     --headless: Run headless (without graphical interface)
+    -w, --width: Image width
+    -h, --height: Image height
 
     Headless options
     -c, --count: Number of images to create
@@ -12,7 +14,8 @@ def print_help():
 
 # First, process command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "?cwh", ["help","headless","count","width","height"])
+    opts, args = getopt.getopt(sys.argv[1:], "?cwh",
+                 ["help","headless","count","width","height"])
 except getopt.error as msg:
     sys.stdout = sys.stderr
     print(msg)
