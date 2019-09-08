@@ -2,7 +2,14 @@ import inspect, numpy, os, random, sys, transforms
 from baseforms import MoebiusBase, SphericalBase
 from click import progressbar
 from image import Image
+from math import log10, isnan
 
+
+def safelog10(x):
+    try:
+        return log10(x)
+    except ValueError:
+        return 0.0
 
 def test_seed(num_transforms, moebius_chance, spherical_chance, seed):
     """
@@ -11,7 +18,7 @@ def test_seed(num_transforms, moebius_chance, spherical_chance, seed):
     """
     lowres = IFSI(150, 150, 1000, 1000, num_transforms, moebius_chance, spherical_chance, seed)
     if lowres.iterate(range(1000)):
-        if lowres.im.interest_factor() >= 100:
+        if lowres.im.interest_factor() >= 120:
             return True
     return False
 
@@ -97,7 +104,7 @@ class IFSI: # IFS Image
         return self
 
     def get_image(self):
-        a = numpy.array(self.im.data)
+        a = numpy.array([safelog10(x) for x in self.im.data])
         return numpy.reshape(a / max(a), (self.im.width, self.im.height, 3))
 
 class IFS:
