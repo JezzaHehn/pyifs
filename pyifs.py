@@ -44,11 +44,28 @@ for opt, arg in opts:
 #     func(sys.stdin.buffer, sys.stdout.buffer)
 
 
-if HEADLESS == False:
+if HEADLESS:
+    # Create small images as dataset for classifier and GAN experiments
+    for subdir, num in [("training",500),("validation",50)]:
+        for i in range(num):
+            path = os.path.join("data", subdir, "ifs")
+            if not os.path.exists(path): os.makedirs(path)
+            filename = os.path.join(path, "%03d"%i + ".png")
+            # Create new ONLY if that filename hasn't been used yet
+            # (for manual data sanitation, selective regeneration)
+            if not os.path.exists(filename):
+                ifsi = IFSI(config.width, config.height, config.iterations,
+                            config.num_points, config.num_transforms,
+                            config.moebius_chance, config.spherical_chance,
+                            get_seed(config.num_transforms, config.moebius_chance,
+                            config.spherical_chance), filename=filename)
+                ifsi.render().save_image()
+
+else:
     # Set up gui
     import PySimpleGUI as sg
-    # from matplotlib import pyplot as plt
-    # plt.ion()
+    from matplotlib import pyplot as plt
+    plt.ion()
 
     # Set default colour scheme for windows
     sg.ChangeLookAndFeel('GreenTan')
@@ -129,8 +146,8 @@ if HEADLESS == False:
             if ifsi.render(bar=bar):
                 ifsi.save_image()
                 ifsi.save_parameters()
-                # plt.imshow(ifsi.get_image())
-                # plt.draw()
+                plt.imshow(ifsi.get_image())
+                plt.draw()
                 image_window = sg.Window(ifsi.filename, [[sg.Image(ifsi.filename)]])
                 image_window.Finalize()
 
@@ -145,20 +162,3 @@ if HEADLESS == False:
             # Print unrecognized events.
             # Mainly for debugging; shouldn't normally happen.
             print(event, values)
-
-
-
-# # Create small images as dataset for classifier and GAN experiments
-# for t in ["Linear","Bubble"]:
-#     for i in range(10):
-#         path = os.path.join("data/training", t)
-#         if not os.path.exists(path):
-#             os.makedirs(path)
-#         filename = os.path.join(path, t + "%03d"%i + ".png")
-#         IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize), include=[t], filename=filename)
-# for i in range(10):
-#     path = os.path.join("data/validation", t)
-#     if not os.path.exists(path):
-#         os.makedirs(path)
-#     filename = os.path.join(path, t + "%03d"%i + ".png")
-#     IFSI(config.width, config.height, config.iterations, config.num_points, config.num_transforms, random.randrange(sys.maxsize), include=[t], filename=filename)
